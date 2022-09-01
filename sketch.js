@@ -1,237 +1,160 @@
-var bg, bgImg;
-var player, shooterImg, shooter_shooting;
-var zombie, zombieImg;
+var bg, bgImg
+var bottomGround
+var topGround
+var balloon, balloonImg
+var obstacleTop, obsTop1, obsTop2
+var obstacleBottom, obsBottom1, obsBottom2, obsBottom3
 
-var heart1, heart2, heart3;
-var heart1Img, heart2Img, heart3Img;
-var life = 3
-var zombieGroup;
 
-var bullets = 70;
-var lose
-var winning
-var explosion
-var gameState = "fight"
-var score = 0
 
-function preload() {
+function preload(){
+bgImg = loadImage("assets/bg.png")
 
-  heart1Img = loadImage("assets/heart_1.png")
-  heart2Img = loadImage("assets/heart_2.png")
-  heart3Img = loadImage("assets/heart_3.png")
+balloonImg = loadAnimation("assets/balloon1.png","assets/balloon2.png","assets/balloon3.png")
 
-  shooterImg = loadImage("assets/shooter_2.png")
-  shooter_shooting = loadImage("assets/shooter_3.png")
+obsTop1 = loadImage("assets/obsTop1.png")
+obsTop2 = loadImage("assets/obsTop2.png")
 
-  zombieImg = loadImage("assets/zombie.png")
-
-  bgImg = loadImage("assets/bg.jpeg")
-  lose = loadSound("assets/lose.mp3")
-  winning = loadSound("assets/win.mp3")
-  explosion = loadSound("assets/explosion.mp3")
+obsBottom1 = loadImage("assets/obsBottom1.png")
+obsBottom2 = loadImage("assets/obsBottom2.png")
+obsBottom3 = loadImage("assets/obsBottom3.png")
 
 }
 
-function setup() {
+function setup(){
+
+  createCanvas(400,400)
+//background image
+bg = createSprite(165,485,1,1);
+bg.addImage(bgImg);
+bg.scale = 1.3
 
 
-  createCanvas(windowWidth, windowHeight);
+//creating top and bottom grounds
+bottomGround = createSprite(200,390,800,20);
+bottomGround.visible = false;
 
-  //adding the background image
-  bg = createSprite(displayWidth / 2 - 20, displayHeight / 2 - 40, 20, 20)
-  bg.addImage(bgImg)
-  bg.scale = 1.1
+topGround = createSprite(200,10,800,20);
+topGround.visible = false;
+      
+//creating balloon     
+balloon = createSprite(100,200,20,50);
+balloon.addAnimation("balloon",balloonImg);
+balloon.scale = 0.2;
 
-
-  //creating the player sprite
-  player = createSprite(displayWidth - 1150, displayHeight - 300, 50, 50);
-  player.addImage(shooterImg)
-  player.scale = 0.3
-  player.debug = true
-  player.setCollider("rectangle", 0, 0, 300, 300)
-
-
-  //creating sprites to depict lives remaining
-  heart1 = createSprite(displayWidth - 150, 40, 20, 20)
-  heart1.visible = false
-  heart1.addImage("heart1", heart1Img)
-  heart1.scale = 0.4
-
-  heart2 = createSprite(displayWidth - 100, 40, 20, 20)
-  heart2.visible = false
-  heart2.addImage("heart2", heart2Img)
-  heart2.scale = 0.4
-
-  heart3 = createSprite(displayWidth - 150, 40, 20, 20)
-  heart3.addImage("heart3", heart3Img)
-  heart3.scale = 0.4
-
-
-  //creating groups for zombies and bullets
-  bulletGroup = new Group()
-  zombieGroup = new Group()
-
-
+topObstaclesGroup = new Group();
+ bottomObstaclesGroup = new Group();
+ barGroup = new Group();
 
 }
 
 function draw() {
-  background(0);
+  
+  background("black");
+        
+          //making the hot air balloon jump
+          if(keyDown("space")) {
+            balloon.velocityY = -5 ;
+            
+          }
 
-
-  if (gameState === "fight") {
-    if (life === 3) {
-      heart3.visible = true
-      heart1.visible = false
-      heart2.visible = false
-    }
-    if (life === 2) {
-      heart2.visible = true
-      heart1.visible = false
-      heart3.visible = false
-    }
-    if (life === 1) {
-      heart1.visible = true
-      heart3.visible = false
-      heart2.visible = false
-    }
-
-    if (life === 0) {
-      gameState = "lost"
-    }
-
-    if (score == 100) {
-      gameState = "won"
-      winning.play();
-    }
-
-    //moving the player up and down and making the game mobile compatible using touches
-    if (keyDown("UP_ARROW") || touches.length > 0) {
-      player.y = player.y - 30
-    }
-    if (keyDown("DOWN_ARROW") || touches.length > 0) {
-      player.y = player.y + 30
-    }
-
-
-
-    //release bullets and change the image of shooter to shooting position when space is pressed
-    if (keyWentDown("space")) {
-      bullet = createSprite(displayWidth - 1150, player.y - 30, 20, 10)
-      bullet.velocityX = 20
-
-      bulletGroup.add(bullet)
-      player.depth = bullet.depth
-      player.depth = player.depth + 2
-      player.addImage(shooter_shooting)
-      bullets = bullets - 1
-      explosion.play();
-    }
-
-    //player goes back to original standing image once we stop pressing the space bar
-    else if (keyWentUp("space")) {
-      player.addImage(shooterImg)
-    }
-
-    //go to gameState "bullet" when player runs out of bullets
-    if (bullets == 0) {
-      gameState = "bullet"
-      lose.play();
-
-    }
-
-    //destroy the zombie when bullet touches it
-    if (zombieGroup.isTouching(bulletGroup)) {
-      for (var i = 0; i < zombieGroup.length; i++) {
-
-        if (zombieGroup[i].isTouching(bulletGroup)) {
-          zombieGroup[i].destroy()
-          bulletGroup.destroyEach()
-          explosion.play();
-          score = score + 2
+          //adding gravity
+           balloon.velocityY = balloon.velocityY +2;
+        
+           
+          Bar();
+   
+        
+       
+        //spawning top obstacles
+      spawnObstaclesTop();
+      spawnObstaclesBottom();
+      
+      
+      drawSprites();
         }
+function spawnObstaclesTop() 
+{
+      if(World.frameCount % 60 === 0) {
+        obstacleTop = createSprite(400,50,40,50);
+    
+    //obstacleTop.addImage(obsTop1);
+    
+    obstacleTop.scale = 0.1;
+    obstacleTop.velocityX = -4;
 
-      }
+    //random y positions for top obstacles
+    obstacleTop.y = Math.round(random(10,100));
+
+    //generate random top obstacles
+    var rand = Math.round(random(1,2));
+    switch(rand) {
+      case 1: obstacleTop.addImage(obsTop1);
+              break;
+      case 2: obstacleTop.addImage(obsTop2);
+              break;
+      default: break;
     }
 
-    //destroy zombie when player touches it
-    if (zombieGroup.isTouching(player)) {
-      lose.play();
-
-      for (var i = 0; i < zombieGroup.length; i++) {
-
-        if (zombieGroup[i].isTouching(player)) {
-          zombieGroup[i].destroy()
-          life = life - 1
-        }
-
+     //assign lifetime to the variable
+   obstacleTop.lifetime = 100;
+    
+   balloon.depth = balloon.depth + 1;
+   
       }
+}
+
+function spawnObstaclesBottom() 
+{
+      if(World.frameCount % 60 === 0) {
+        obstacleBottom = createSprite(400,350,40,50);
+
+      obstacleBottom.addImage(obsBottom1)  
+
+    
+    //obstacleTop.addImage(obsTop1);
+     
+    
+    obstacleBottom.scale = 0.07;
+    obstacleBottom.velocityX = -4;
+
+    //random y positions for top obstacles
+    //obstacleBottom.y = Math.round(random(10,100));
+
+    //generate random top obstacles
+    var rand = Math.round(random(1,3));
+    switch(rand) {
+      case 1: obstacleBottom.addImage(obsBottom1);
+              break;
+      case 2: obstacleBottom.addImage(obsBottom2);
+              break;
+       case 3: obstacleBottom.addImage(obsBottom3);
+              break;        
+      default: break;
     }
 
-    //calling the function to spawn zombies
-    enemy();
-  }
+     //assign lifetime to the variable
+   obstacleBottom.lifetime = 100;
+    
+   balloon.Bottom = balloon.depth + 1;
 
-  drawSprites();
-  textSize(20)
-  fill("white")
-  text("Bullets = " + bullets, displayWidth - 210, displayHeight / 2 - 250)
-  text("Score = " + score, displayWidth - 200, displayHeight / 2 - 220)
-
-  text("Lives = " + life, displayWidth - 200, displayHeight / 2 - 280)
-
-  //destroy zombie and player and display a message in gameState "lost"
-  if (gameState == "lost") {
-
-    textSize(100)
-    fill("red")
-    text("You Lost ", 400, 400)
-    zombieGroup.destroyEach();
-    player.destroy();
-
-  }
-
-  //destroy zombie and player and display a message in gameState "won"
-  else if (gameState == "won") {
-
-    textSize(100)
-    fill("yellow")
-    text("You Won ", 400, 400)
-    zombieGroup.destroyEach();
-    player.destroy();
-
-  }
-
-  //destroy zombie, player and bullets and display a message in gameState "bullet"
-  else if (gameState == "bullet") {
-
-    textSize(50)
-    fill("yellow")
-    text("You ran out of bullets!!!", 470, 410)
-    zombieGroup.destroyEach();
-    player.destroy();
-    bulletGroup.destroyEach();
-
-  }
-
+   bottomObstaclesGroup.add(obstacleBottom)
+  
+      }
 }
 
 
-//creating function to spawn zombies
-function enemy() {
-  if (frameCount % 50 === 0) {
-
-    //giving random x and y positions for zombie to appear
-    zombie = createSprite(random(500, 1100), random(100, 500), 40, 40)
-
-    zombie.addImage(zombieImg)
-    zombie.scale = 0.15
-    zombie.velocityX = -3
-    zombie.debug = true
-    zombie.setCollider("rectangle", 0, 0, 400, 400)
-
-    zombie.lifetime = 400
-    zombieGroup.add(zombie)
-  }
-
+ function Bar() 
+ {
+         if(World.frameCount % 60 === 0)
+         {
+           var bar = createSprite(400,200,10,800);
+          bar.velocityX = -6
+          bar.depth = balloon.depth;
+          bar.lifetime = 70;
+          bar.visible = false;
+         }
 }
+
+
+  
